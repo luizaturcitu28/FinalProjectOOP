@@ -8,8 +8,8 @@
       "args": [],
       "stopAtEntry": false,
       "externalConsole": true,
-      "cwd": "c:/Users/user/Desktop/FinalProjectOPP",
-      "program": "c:/Users/user/Desktop/FinalProjectOPP/build/Debug/outDebug",
+      "cwd": "c:/Users/user/Desktop/FinalProjectOOP",
+      "program": "c:/Users/user/Desktop/FinalProjectOOP/build/Debug/outDebug",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [
