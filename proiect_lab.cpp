@@ -20,6 +20,10 @@ public:
     {
         return true;
     }
+    virtual void displayDescription() const
+    {
+        std::cout << "No description available for this step" << std::endl;
+    }
     virtual ~Step() = default;
 };
 
@@ -41,6 +45,10 @@ public:
     {
         return "TITLE";
     }
+    void displayDescription() const override
+    {
+        std::cout << "This step displays a title and a subtitle" << std::endl;
+    }
 };
 
 class TextStep : public Step
@@ -60,6 +68,11 @@ public:
     std::string getType() const override
     {
         return "TEXT";
+    }
+
+    void displayDescription() const override
+    {
+        std::cout << "This step displays a title and a copy" << std::endl;
     }
 
     bool userInteraction() override
@@ -92,6 +105,11 @@ public:
     {
         return "TEXT INPUT";
     }
+
+    void displayDescription() const override
+    {
+        std::cout << "This step displays a text and a description" << std::endl;
+    }
 };
 
 class NumberInputStep : public Step
@@ -120,6 +138,11 @@ public:
     std::string getType() const override
     {
         return "NUMBER INPUT";
+    }
+
+    void displayDescription() const override
+    {
+        std::cout << "This step displays a description and a number" << std::endl;
     }
 };
 
@@ -193,6 +216,11 @@ public:
     {
         return "CALCULUS";
     }
+
+    void displayDescription() const override
+    {
+        std::cout << "This step displays the number of steps, the operation and the operands" << std::endl;
+    }
 };
 
 class DisplayStep : public Step
@@ -223,6 +251,11 @@ public:
     {
         return "DISPLAY";
     }
+
+    void displayDescription() const override
+    {
+        std::cout << "This step displays the number of the step" << std::endl;
+    }
 };
 
 class TextFileInputStep : public Step
@@ -245,6 +278,11 @@ public:
     {
         return "TEXT FILE INPUT";
     }
+
+    void displayDescription() const override
+    {
+        std::cout << "This step displays a description and the name of the file" << std::endl;
+    }
 };
 
 class CSVFileInputStep : public Step
@@ -263,6 +301,11 @@ public:
     std::string getType() const override
     {
         return "CSV FILE INPUT";
+    }
+
+    void displayDescription() const override
+    {
+        std::cout << "This step displays a description and the name of the file" << std::endl;
     }
 };
 
@@ -292,6 +335,11 @@ public:
     {
         return "OUTPUT";
     }
+
+    void displayDescription() const override
+    {
+        std::cout << "This step displays the step number, the name of the file, the title and the description" << std::endl;
+    }
 };
 
 class EndStep : public Step
@@ -305,6 +353,11 @@ public:
     std::string getType() const override
     {
         return "END";
+    }
+
+    void displayDescription() const override
+    {
+        std::cout << "This step is the end of the flow" << std::endl;
     }
 };
 
@@ -341,23 +394,39 @@ public:
 
     void runFlow()
     {
+        std::cout << "Running flow '" << flowName << "' created at: " << std::asctime(std::localtime(&creationTimestamp));
+
         for (Step *step : steps)
         {
+            std::cout << "Executing step: " << step->getType() << std::endl;
+
+            // Execute the step
             step->execute();
 
-            // Check if user wants to skip the step
+            // Check if the user wants to skip the step
             if (!step->userInteraction())
             {
                 std::cout << "Skipping to the next step..." << std::endl;
                 continue;
             }
 
-            // Continue to the next step
+            // Wait for user confirmation to proceed to the next step
             std::cout << "Press enter to proceed to the next step...";
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         }
 
         std::cout << "Flow completed." << std::endl;
+    }
+
+    void displayAvailableSteps() const
+    {
+        std::cout << "Available steps: " << std::endl;
+        for (const Step *step : steps)
+        {
+            std::cout << "- Type: " << step->getType() << std::endl;
+            step->displayDescription();
+            std::cout << std::endl;
+        }
     }
 
     std::string getCreationTimestamp() const
@@ -374,6 +443,8 @@ int main()
     std::cout << "Enter the name for your flow: ";
     std::getline(std::cin, flowName);
     process.setFlowName(flowName);
+
+    process.displayAvailableSteps();
 
     process.addStep(new TextStep("Welcome", "This is a sample flow!"));
     process.addStep(new TextInputStep("Enter your name: "));
