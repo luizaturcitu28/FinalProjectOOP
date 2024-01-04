@@ -6,6 +6,7 @@
 #include <fstream>
 #include <algorithm>
 #include <stdexcept>
+#include <sstream>
 #include <limits>
 
 class Step;
@@ -262,16 +263,34 @@ class TextFileInputStep : public Step
 {
 private:
     std::string description;
-    std::string file_name;
+    std::string fileName;
+    std::string fileContent;
 
 public:
-    TextFileInputStep(const std::string &description, const std::string &file_name) : description(description), file_name(file_name) {}
+    TextFileInputStep(const std::string &description, const std::string &file_name) : description(description), fileName(fileName) {}
 
     void execute() override
     {
-        std::cout << "Executing TextFileInputText: " << description << "\n";
+        std::cout << "Description: " << description << "\nFile name: " << fileName << std::endl;
+        std::ifstream inputFile(fileName);
 
-        // read the content from the file we will create
+        if (inputFile.is_open())
+        {
+            // read the content from the file
+            std::string line;
+            while (std::getline(inputFile, line))
+            {
+                fileContent += line + '\n';
+            }
+            std::cout << "File content: \n"
+                      << fileContent << std::endl;
+            // close the file
+            inputFile.close();
+        }
+        else
+        {
+            std::cerr << "Unable to open the file: " << fileName << std::endl;
+        }
     }
 
     std::string getType() const override
@@ -290,13 +309,50 @@ class CSVFileInputStep : public Step
 private:
     std::string description;
     std::string file_name;
+    std::vector<std::vector<std::string>> csvData;
 
 public:
     CSVFileInputStep(const std::string &description, const std::string &file_name) : description(description), file_name(file_name) {}
 
     void execute() override
     {
-        // read the content from the CSV file
+        std::cout << "Description: " << description << "\nFile name: " << file_name << std::endl;
+        std::ifstream inputFile(file_name);
+
+        if (inputFile.is_open())
+        {
+            std::string line;
+            while (std::getline(inputFile, line))
+            {
+                std::vector<std::string> row;
+                std::stringstream ss(line);
+                std::string cell;
+
+                while (std::getline(ss, cell, ','))
+                {
+                    row.push_back(cell);
+                }
+                csvData.push_back(row);
+            }
+
+            // display the CSV data
+            std::cout << "CSV content: " << std::endl;
+            for (const auto &row : csvData)
+            {
+                for (const auto &cell : row)
+                {
+                    std::cout << cell << " | ";
+                }
+                std::cout << std::endl;
+            }
+
+            // close file
+            inputFile.close();
+        }
+        else
+        {
+            std::cerr << "Unable to open file: " << file_name << std::endl;
+        }
     }
     std::string getType() const override
     {
@@ -445,6 +501,9 @@ int main()
     process.setFlowName(flowName);
 
     process.displayAvailableSteps();
+
+    std::string fileName = "flow.txt";
+    std::string file_name = "flow.csv";
 
     process.addStep(new TextStep("Welcome", "This is a sample flow!"));
     process.addStep(new TextInputStep("Enter your name: "));
