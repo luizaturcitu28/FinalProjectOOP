@@ -443,9 +443,10 @@ public:
         flowName = name;
     }
 
-    void addStep(Step *step)
+    template <typename T, typename... Args>
+    void addStep(Args &&...args)
     {
-        steps.push_back(step);
+        steps.push_back(new T(std::forward<Args>(args)...));
     }
 
     void runFlow()
@@ -502,13 +503,128 @@ int main()
 
     process.displayAvailableSteps();
 
+    // dynamically add steps to the flow
+    char addMore;
+    do
+    {
+        std::cout << "Enter the type of step to add (TITLE, TEXT, NUMBER, etc.): ";
+        std::string stepType;
+        std::cin >> stepType;
+
+        if (stepType == "TITLE")
+        {
+            std::string title, subtitle;
+            std::cout << "Enter title: ";
+            std::cin >> title;
+            std::cout << "Enter subtitle: ";
+            std::cin >> subtitle;
+            process.addStep<TitleStep>(title, subtitle);
+        }
+
+        else if (stepType == "TEXT")
+        {
+            std::string title;
+            std::string copy;
+            std::cout << "Enter title: ";
+            std::cin >> title;
+            std::cout << "Enter copy: ";
+            std::cin >> copy;
+            process.addStep<TextStep>(title, copy);
+        }
+
+        else if (stepType == "TEXT INPUT")
+        {
+            std::string textInput;
+            std::string description;
+            std::cout << "Enter a text input: ";
+            std::cin >> textInput;
+            std::cout << "Enter a description: ";
+            std::cin >> description;
+            process.addStep<TextInputStep>(textInput, description);
+        }
+
+        else if (stepType == "NUMBER INPUT")
+        {
+            std::string description;
+            float numberInput;
+            std::cout << "Enter a description: ";
+            std::cin >> description;
+            std::cout << "Enter a number input: ";
+            std::cin >> numberInput;
+            process.addStep<NumberInputStep>(description, numberInput);
+        }
+
+        else if (stepType == "CALCULUS")
+        {
+            int steps;
+            std::string operation;
+            std::cout << "Enter the number of the steps: ";
+            std::cin >> steps;
+            std::cout << "Enter the operation: ";
+            std::cin >> operation;
+            process.addStep<NumberInputStep>(steps, operation);
+        }
+
+        else if (stepType == "DISPLAY")
+        {
+            int step;
+            std::cout << "Enter a step to display: (1, 2, ..., 10)";
+            std::cin >> step;
+            process.addStep<DisplayStep>(step);
+        }
+
+        else if (stepType == "TEXT FILE INPUT")
+        {
+            std::string description;
+            std::string fileName;
+            std::string fileContent;
+            std::cout << "Enter a description for this step: ";
+            std::cin >> description;
+            std::cout << "Enter the name of this file: ";
+            std::cout << fileName;
+            process.addStep<TextFileInputStep>(description, fileName);
+        }
+
+        else if (stepType == "CSV FILE INPUT")
+        {
+            std::string description;
+            std::string file_name;
+            std::cout << "Enter a description for this step: ";
+            std::cin >> description;
+            std::cout << "Enter the name of this file: ";
+            std::cin >> file_name;
+            process.addStep<CSVFileInputStep>(description, file_name);
+        }
+
+        else if (stepType == "OUTPUT")
+        {
+            int step;
+            std::string fileName;
+            std::string title;
+            std::string description;
+            std::cout << "Enter the number of the step (1, 2, ..., 10): ";
+            std::cin >> step;
+            std::cout << "Enter the name of the file from where you want to extract the informations: ";
+            std::cin >> fileName;
+            std::cout << "Enter a title for this step: ";
+            std::cin >> title;
+            std::cout << "Enter a description for this step: ";
+            std::cin >> description;
+            process.addStep<OutputStep>(step, fileName, title, description);
+        }
+
+        else
+        {
+            process.addStep<EndStep>();
+        }
+
+        std::cout << "Do you want to add more steps? (y/n): ";
+        std::cin >> addMore;
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    } while (addMore == 'y' || addMore == 'Y');
+
     std::string fileName = "flow.txt";
     std::string file_name = "flow.csv";
-
-    process.addStep(new TextStep("Welcome", "This is a sample flow!"));
-    process.addStep(new TextInputStep("Enter your name: "));
-    process.addStep(new NumberInputStep("Enter a number: "));
-    process.addStep(new EndStep());
 
     process.runFlow();
 
