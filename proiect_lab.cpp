@@ -9,6 +9,7 @@
 #include <sstream>
 #include <limits>
 #include <iomanip>
+#include <unordered_map>
 using namespace std;
 
 class Step;
@@ -58,6 +59,17 @@ public:
     {
         return "TITLE";
     }
+
+    bool userInteraction() override
+    {
+        // Add logic for user interaction specific to TextStep
+        std::cout << "Press 'N' to skip to the next step or any other key to continue: ";
+        char choice;
+        std::cin >> choice;
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Clear the input buffer
+        return (choice != 'N' && choice != 'n');
+    }
+
     void displayDescription() const override
     {
         std::cout << "This step displays a title and a subtitle" << std::endl;
@@ -83,11 +95,6 @@ public:
         return "TEXT";
     }
 
-    void displayDescription() const override
-    {
-        std::cout << "This step displays a title and a copy" << std::endl;
-    }
-
     bool userInteraction() override
     {
         // Add logic for user interaction specific to TextStep
@@ -96,6 +103,11 @@ public:
         std::cin >> choice;
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Clear the input buffer
         return (choice != 'N' && choice != 'n');
+    }
+
+    void displayDescription() const override
+    {
+        std::cout << "This step displays a title and a copy" << std::endl;
     }
 };
 
@@ -325,6 +337,16 @@ public:
         return "CALCULUS";
     }
 
+    bool userInteraction() override
+    {
+        // Add logic for user interaction specific to TextStep
+        std::cout << "Press 'N' to skip to the next step or any other key to continue: ";
+        char choice;
+        std::cin >> choice;
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Clear the input buffer
+        return (choice != 'N' && choice != 'n');
+    }
+
     void displayDescription() const override
     {
         std::cout << "This step displays the number of steps, the operation and the operands" << std::endl;
@@ -373,6 +395,16 @@ public:
     std::string getType() const override
     {
         return "DISPLAY";
+    }
+
+    bool userInteraction() override
+    {
+        // Add logic for user interaction specific to TextStep
+        std::cout << "Press 'N' to skip to the next step or any other key to continue: ";
+        char choice;
+        std::cin >> choice;
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Clear the input buffer
+        return (choice != 'N' && choice != 'n');
     }
 
     void displayFileContent(const std::string &fileName) const
@@ -437,6 +469,16 @@ public:
         return "TEXT FILE INPUT";
     }
 
+    bool userInteraction() override
+    {
+        // Add logic for user interaction specific to TextStep
+        std::cout << "Press 'N' to skip to the next step or any other key to continue: ";
+        char choice;
+        std::cin >> choice;
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Clear the input buffer
+        return (choice != 'N' && choice != 'n');
+    }
+
     void displayDescription() const override
     {
         std::cout << "This step displays a description and the name of the file" << std::endl;
@@ -496,6 +538,16 @@ public:
     std::string getType() const override
     {
         return "CSV FILE INPUT";
+    }
+
+    bool userInteraction() override
+    {
+        // Add logic for user interaction specific to TextStep
+        std::cout << "Press 'N' to skip to the next step or any other key to continue: ";
+        char choice;
+        std::cin >> choice;
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Clear the input buffer
+        return (choice != 'N' && choice != 'n');
     }
 
     void displayDescription() const override
@@ -559,6 +611,16 @@ public:
             std::cout << content << std::endl;
         }
     }
+
+    bool userInteraction() override
+    {
+        // Add logic for user interaction specific to TextStep
+        std::cout << "Press 'N' to skip to the next step or any other key to continue: ";
+        char choice;
+        std::cin >> choice;
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Clear the input buffer
+        return (choice != 'N' && choice != 'n');
+    }
 };
 
 class EndStep : public Step
@@ -587,10 +649,20 @@ private:
     std::string flowName;
     time_t creationTimestamp;
 
+    // Analytics
+    int startCount;
+    int completionCount;
+    std::unordered_map<std::string, int> screenSkipCount;
+    std::unordered_map<std::string, int> errorScreenCount;
+    int totalErrorCount;
+
 public:
     ProcessBuilder()
     {
-        creationTimestamp = time(nullptr);
+        creationTimestamp = time(nullptr); // set the creation time stamp to the current time
+        startCount = 0;
+        completionCount = 0;
+        totalErrorCount = 0;
     }
 
     ~ProcessBuilder()
@@ -606,6 +678,11 @@ public:
         flowName = name;
     }
 
+    std::string getFlowName() const
+    {
+        return flowName;
+    }
+
     template <typename T, typename... Args>
     void addStep(Args &&...args)
     {
@@ -614,6 +691,7 @@ public:
 
     void runFlow()
     {
+        startCount++;
         std::cout << "Running flow '" << flowName << "' created at: " << std::asctime(std::localtime(&creationTimestamp));
 
         std::vector<std::string> contentFromPreviousSteps;
@@ -642,6 +720,7 @@ public:
             else
             {
                 std::cout << "Skipping to the next step..." << std::endl;
+                screenSkipCount[step->getType()]++;
             }
 
             // Wait for user confirmation to proceed to the next step
@@ -655,7 +734,74 @@ public:
             std::cout << "Final Result: " << lastCalculusStep->getResult() << std::endl;
         }
 
+        completionCount++;
         std::cout << "Flow completed." << std::endl;
+    }
+
+    // Error handling
+    void reportError(const std::string &stepType)
+    {
+        errorScreenCount[stepType]++;
+        totalErrorCount++;
+    }
+
+    // Analytics
+    void displayAnalytics() const
+    {
+        std::cout << "Analytics for flow '" << flowName << "':" << std::endl;
+        std::cout << "Flow started: " << startCount << " times" << std::endl;
+        std::cout << "Flow completed: " << completionCount << " times" << std::endl;
+
+        std::cout << "Screen skip counts:" << std::endl;
+        for (const auto &entry : screenSkipCount)
+        {
+            std::cout << entry.first << ": " << entry.second << " times" << std::endl;
+        }
+
+        std::cout << "Error screen counts:" << std::endl;
+        for (const auto &entry : errorScreenCount)
+        {
+            std::cout << entry.first << ": " << entry.second << " times" << std::endl;
+        }
+
+        if (completionCount > 0)
+        {
+            double averageErrors = static_cast<double>(totalErrorCount) / completionCount;
+            std::cout << "Average number of errors per flow completed: " << averageErrors << std::endl;
+        }
+        else
+        {
+            std::cout << "Average number of errors per flow completed: N/A (no completions)" << std::endl;
+        }
+    }
+
+    // function to delete a flow
+    void deleteFlow(const std::string &flowToDelete)
+    {
+        // check if the flow we eant to delete matches the current flow
+        if (flowToDelete == flowName)
+        {
+            std::cout << "Deleting flow '" << flowToDelete << "'..." << std::endl;
+            // clean up allocated steps
+            for (Step *step : steps)
+            {
+                delete step;
+            }
+            // clear the step vector
+            steps.clear();
+            // reset analytics
+            startCount = 0;
+            completionCount = 0;
+            screenSkipCount.clear();
+            errorScreenCount.clear();
+            totalErrorCount = 0;
+            // reset flow name
+            flowName.clear();
+        }
+        else
+        {
+            std::cerr << "Error!!! Flow '" << flowToDelete << "' not found" << std::endl;
+        }
     }
 
     void displayAvailableSteps() const
@@ -853,7 +999,9 @@ int main()
         else if (stepType == "OUTPUT")
         {
             int stepNumber;
-            std::string fileName, title, description;
+            std::string fileName;
+            std::string title;
+            std::string description;
             std::vector<std::string> contentFromPreviousSteps;
 
             std::cout << "Enter step number for OUTPUT step: ";
@@ -892,5 +1040,8 @@ int main()
 
     // Get and display the creation timestamp
     std::cout << "Flow '" << flowName << "' created at: " << process.getCreationTimestamp() << std::endl;
+    process.displayAnalytics();
+
+    process.deleteFlow(flowName);
     return 0;
 }
