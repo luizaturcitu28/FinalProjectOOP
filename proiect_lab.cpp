@@ -15,6 +15,7 @@ using namespace std;
 class Step;
 class ProcessBuilder;
 
+// enumeration class for all the operations used in calculus step
 enum class OperationType
 {
     Addition,
@@ -48,6 +49,7 @@ private:
     std::string subtitle;
 
 public:
+    // constructor for title step
     TitleStep(const std::string &title, const std::string &subtitle) : title(title), subtitle(subtitle) {}
 
     void execute() override
@@ -60,9 +62,10 @@ public:
         return "TITLE";
     }
 
+    // function used to see if the user wants to skip to the next step
     bool userInteraction() override
     {
-        // Add logic for user interaction specific to TextStep
+        // add logic for user interaction specific to title step
         std::cout << "Press 'N' to skip to the next step or any other key to continue: ";
         char choice;
         std::cin >> choice;
@@ -83,6 +86,7 @@ private:
     std::string copy;
 
 public:
+    // constructor for text step
     TextStep(const std::string &title, const std::string &copy) : title(title), copy(copy) {}
 
     void execute() override
@@ -95,9 +99,10 @@ public:
         return "TEXT";
     }
 
+    // function used to see if the user wants to skip to the next step
     bool userInteraction() override
     {
-        // Add logic for user interaction specific to TextStep
+        // add logic for user interaction specific to TextStep
         std::cout << "Press 'N' to skip to the next step or any other key to continue: ";
         char choice;
         std::cin >> choice;
@@ -118,6 +123,7 @@ private:
     std::string description;
 
 public:
+    // constructor fot text input step
     TextInputStep(const std::string &description) : description(description) {}
 
     void execute() override
@@ -133,6 +139,7 @@ public:
         return "TEXT INPUT";
     }
 
+    // function used to see if the user wants to skip to the next step
     bool userInteraction() override
     {
         std::cout << "Press 'N' to skip to the next step or any other key to continue: ";
@@ -161,6 +168,7 @@ private:
     std::string fileName;
 
 public:
+    // constructor for csv input step
     CSVInputStep(const std::string &description) : description(description) {}
 
     void execute() override
@@ -182,6 +190,7 @@ public:
         return "CSV INPUT";
     }
 
+    // function used to see if the user wants to skip to the next step
     bool userInteraction() override
     {
         std::cout << "Press 'N' to skip to the next step or any other key to continue: ";
@@ -206,9 +215,9 @@ public:
         return fileName;
     }
 
+    // function to save csv data to the specified files
     void saveCsvToFile() const
     {
-        // Optional: Save CSV data to the specified file
         std::ofstream outputFile(fileName);
         if (outputFile.is_open())
         {
@@ -230,6 +239,7 @@ private:
     float numberInput;
 
 public:
+    // constructor for number input step
     NumberInputStep(const std::string &description) : description(description) {}
 
     void execute() override
@@ -238,6 +248,7 @@ public:
         std::cout << "Enter a number: ";
         std::cin >> numberInput;
 
+        // if the reading doesn't work
         if (std::cin.fail())
         {
             std::cin.clear();
@@ -253,6 +264,7 @@ public:
         return "NUMBER INPUT";
     }
 
+    // function used to see if the user wants to skip to the next step
     bool userInteraction() override
     {
         std::cout << "Press 'N' to skip to the next step or any other key to continue: ";
@@ -276,12 +288,14 @@ public:
 class CalculusStep : public Step
 {
 private:
+    // set a vector to the previous steps to be able to effectuate the operations on them
     std::vector<NumberInputStep *> previousSteps;
     std::vector<char> operations;
     float result;
     OperationType operationType;
 
 public:
+    // constructor fot calculus step
     CalculusStep(const std::vector<NumberInputStep *> &steps, const std::vector<char> &ops, OperationType opType) : previousSteps(steps), operations(ops), result(0.0f), operationType(opType) {}
 
     void execute() override
@@ -337,6 +351,7 @@ public:
         return "CALCULUS";
     }
 
+    // function used to see if the user wants to skip to the next step
     bool userInteraction() override
     {
         // Add logic for user interaction specific to TextStep
@@ -361,6 +376,7 @@ public:
 class DisplayStep : public Step
 {
 private:
+    // pointer to the previous step to be able to take the informations from them
     Step *previousStep;
 
 public:
@@ -397,6 +413,7 @@ public:
         return "DISPLAY";
     }
 
+    // function used to see if the user wants to skip to the next step
     bool userInteraction() override
     {
         // Add logic for user interaction specific to TextStep
@@ -407,6 +424,7 @@ public:
         return (choice != 'N' && choice != 'n');
     }
 
+    // function to display the informations from the file
     void displayFileContent(const std::string &fileName) const
     {
         std::ifstream file(fileName);
@@ -438,6 +456,7 @@ private:
     std::string fileContent;
 
 public:
+    // constructor for text file input step
     TextFileInputStep(const std::string &description, const std::string &file_name) : description(description), fileName(fileName) {}
 
     void execute() override
@@ -445,6 +464,7 @@ public:
         std::cout << "Description: " << description << "\nFile name: " << fileName << std::endl;
         std::ifstream inputFile(fileName);
 
+        // check if the file is open
         if (inputFile.is_open())
         {
             // read the content from the file
@@ -469,6 +489,7 @@ public:
         return "TEXT FILE INPUT";
     }
 
+    // function used to see if the user wants to skip to the next step
     bool userInteraction() override
     {
         // Add logic for user interaction specific to TextStep
@@ -493,6 +514,7 @@ private:
     std::vector<std::vector<std::string>> csvData;
 
 public:
+    // constructor for csv file input step
     CSVFileInputStep(const std::string &description, const std::string &file_name) : description(description), file_name(file_name) {}
 
     void execute() override
@@ -500,6 +522,7 @@ public:
         std::cout << "Description: " << description << "\nFile name: " << file_name << std::endl;
         std::ifstream inputFile(file_name);
 
+        // checks if the file is open
         if (inputFile.is_open())
         {
             std::string line;
