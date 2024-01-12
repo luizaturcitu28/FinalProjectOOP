@@ -10,6 +10,7 @@
 #include <limits>
 #include <iomanip>
 #include <unordered_map>
+#include <functional>
 using namespace std;
 
 class Step;
@@ -354,7 +355,7 @@ public:
     // function used to see if the user wants to skip to the next step
     bool userInteraction() override
     {
-        // Add logic for user interaction specific to TextStep
+        // add logic for user interaction specific to TextStep
         std::cout << "Press 'N' to skip to the next step or any other key to continue: ";
         char choice;
         std::cin >> choice;
@@ -416,7 +417,7 @@ public:
     // function used to see if the user wants to skip to the next step
     bool userInteraction() override
     {
-        // Add logic for user interaction specific to TextStep
+        // add logic for user interaction specific to TextStep
         std::cout << "Press 'N' to skip to the next step or any other key to continue: ";
         char choice;
         std::cin >> choice;
@@ -565,7 +566,7 @@ public:
 
     bool userInteraction() override
     {
-        // Add logic for user interaction specific to TextStep
+        // add logic for user interaction specific to TextStep
         std::cout << "Press 'N' to skip to the next step or any other key to continue: ";
         char choice;
         std::cin >> choice;
@@ -637,7 +638,7 @@ public:
 
     bool userInteraction() override
     {
-        // Add logic for user interaction specific to TextStep
+        // add logic for user interaction specific to TextStep
         std::cout << "Press 'N' to skip to the next step or any other key to continue: ";
         char choice;
         std::cin >> choice;
@@ -668,18 +669,19 @@ public:
 class ProcessBuilder
 {
 private:
-    std::vector<Step *> steps;
+    std::vector<Step *> steps; // vector to held steps in the flow
     std::string flowName;
     time_t creationTimestamp;
 
     // Analytics
     int startCount;
     int completionCount;
-    std::unordered_map<std::string, int> screenSkipCount;
-    std::unordered_map<std::string, int> errorScreenCount;
+    std::unordered_map<std::string, int> screenSkipCount;  // count of skipped screens for each step type
+    std::unordered_map<std::string, int> errorScreenCount; // count for error screens for each step type
     int totalErrorCount;
 
 public:
+    // constructor to initialize analytics variables
     ProcessBuilder()
     {
         creationTimestamp = time(nullptr); // set the creation time stamp to the current time
@@ -688,6 +690,7 @@ public:
         totalErrorCount = 0;
     }
 
+    // destructor to clean up allocated steps
     ~ProcessBuilder()
     {
         for (Step *step : steps)
@@ -706,6 +709,7 @@ public:
         return flowName;
     }
 
+    // function to add a step to the flow
     template <typename T, typename... Args>
     void addStep(Args &&...args)
     {
@@ -728,14 +732,15 @@ public:
             {
                 // execute the step
                 step->execute();
-                // If the step is an OUTPUT step, store its content for future steps
+
+                // if the step is an OUTPUT step, store its content for future steps
                 if (step->getType() == "OUTPUT")
                 {
                     const OutputStep *outputStep = dynamic_cast<const OutputStep *>(step);
                     if (outputStep)
                     {
-                        // Extract content from the OUTPUT step and store it
-                        outputStep->displayDescription(); // Display OUTPUT step details
+                        // extract content from the OUTPUT step and store it
+                        outputStep->displayDescription(); // display OUTPUT step details
                         contentFromPreviousSteps.push_back("Content from output step");
                     }
                 }
@@ -746,7 +751,7 @@ public:
                 screenSkipCount[step->getType()]++;
             }
 
-            // Wait for user confirmation to proceed to the next step
+            // wait for user confirmation to proceed to the next step
             std::cout << "Press enter to proceed to the next step...";
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         }
@@ -761,14 +766,14 @@ public:
         std::cout << "Flow completed." << std::endl;
     }
 
-    // Error handling
+    // function to report an error for a specific step type
     void reportError(const std::string &stepType)
     {
         errorScreenCount[stepType]++;
         totalErrorCount++;
     }
 
-    // Analytics
+    // function to display analytics for the flow
     void displayAnalytics() const
     {
         std::cout << "Analytics for flow '" << flowName << "':" << std::endl;
@@ -855,13 +860,13 @@ int main()
 
     process.displayAvailableSteps();
 
-    // dynamically add steps to the flow
+    // dynamically add steps to the flow based on user input
     char addMore;
     do
     {
         std::cout << "Enter the type of step to add (TITLE, TEXT, NUMBER, etc.): ";
         std::string stepType;
-        std::cin >> stepType;
+        std::getline(std::cin, stepType);
 
         if (stepType == "TITLE")
         {
