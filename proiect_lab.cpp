@@ -382,7 +382,6 @@ public:
 
     ~CalculusStep()
     {
-        // cleanup allocated number input objects
         for (NumberInputStep *step : previousSteps)
         {
             delete step;
@@ -745,7 +744,11 @@ public:
             Step *currentStep = steps[currentStepIndex];
             std::cout << "Executing step: " << currentStep->getType() << std::endl;
 
-            if (currentStep->userInteraction())
+            // prompt user to decide if he wants to execute a step or to skip it
+            std::cout << "Do you want to execute this step? (y/n): ";
+            char userChoice;
+            std::cin >> userChoice;
+            if (userChoice == 'Y' || userChoice == 'y')
             {
                 currentStep->execute();
 
@@ -757,6 +760,16 @@ public:
                         // extract content from the OUTPUT step and store it
                         outputStep->displayDescription(); // display OUTPUT step details
                         contentFromPreviousSteps.push_back("Content from output step");
+                    }
+                }
+
+                if (currentStep->getType() == "CALCULUS")
+                {
+                    const CalculusStep *calculusStep = dynamic_cast<const CalculusStep *>(currentStep);
+                    if (calculusStep)
+                    {
+                        // Update error screen count for CALCULUS step
+                        errorScreenCount[currentStep->getType()] += calculusStep->getResult();
                     }
                 }
 
