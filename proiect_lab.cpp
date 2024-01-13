@@ -766,6 +766,17 @@ public:
             {
                 std::cout << "Skipping to the next step..." << std::endl;
                 screenSkipCount[currentStep->getType()]++;
+                continue;
+            }
+
+            if (currentStep->getType() == "CALCULUS")
+            {
+                const CalculusStep *calculusStep = dynamic_cast<const CalculusStep *>(currentStep);
+                if (calculusStep)
+                {
+                    // Update error screen count for CALCULUS step
+                    errorScreenCount[currentStep->getType()] += calculusStep->getResult();
+                }
             }
 
             // wait for user confirmation to proceed to the next step
@@ -877,6 +888,18 @@ int main()
     process.setFlowName(flowName);
 
     process.displayAvailableSteps();
+    std::cout << "Choose one of the following steps: " << endl;
+    std::cout << "1. Title Step" << endl;
+    std::cout << "2. Text Step" << endl;
+    std::cout << "3. Text Input Step" << endl;
+    std::cout << "4. CSV Input Step" << endl;
+    std::cout << "5. Number Input Step" << endl;
+    std::cout << "6. Calculus Step" << endl;
+    std::cout << "7. Display Step" << endl;
+    std::cout << "8. Text File Input Step" << endl;
+    std::cout << "9. CSV File Input Step" << endl;
+    std::cout << "10. Output Step" << endl;
+    std::cout << "11. End Step" << endl;
 
     // dynamically add steps to the flow based on user input
     char addMore;
