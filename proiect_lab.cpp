@@ -331,7 +331,14 @@ public:
                 result *= operand;
                 break;
             case OperationType::Division:
-                result /= operand;
+                if (operand != 0)
+                {
+                    result /= operand;
+                }
+                else
+                {
+                    std::cerr << "Error!! Division by 0!" << std::endl;
+                }
                 break;
             case OperationType::Minimum:
                 result = std::min(result, operand);
@@ -371,6 +378,15 @@ public:
     float getResult() const
     {
         return result;
+    }
+
+    ~CalculusStep()
+    {
+        // cleanup allocated number input objects
+        for (NumberInputStep *step : previousSteps)
+        {
+            delete step;
+        }
     }
 };
 
@@ -722,21 +738,20 @@ public:
         std::cout << "Running flow '" << flowName << "' created at: " << std::asctime(std::localtime(&creationTimestamp));
 
         std::vector<std::string> contentFromPreviousSteps;
+        size_t currentStepIndex = 0;
 
-        for (Step *step : steps)
+        while (currentStepIndex < steps.size())
         {
-            std::cout << "Executing step: " << step->getType() << std::endl;
+            Step *currentStep = steps[currentStepIndex];
+            std::cout << "Executing step: " << currentStep->getType() << std::endl;
 
-            // check if the user wants to skip the step
-            if (step->userInteraction())
+            if (currentStep->userInteraction())
             {
-                // execute the step
-                step->execute();
+                currentStep->execute();
 
-                // if the step is an OUTPUT step, store its content for future steps
-                if (step->getType() == "OUTPUT")
+                if (currentStep->getType() == "OUTPUT")
                 {
-                    const OutputStep *outputStep = dynamic_cast<const OutputStep *>(step);
+                    const OutputStep *outputStep = dynamic_cast<const OutputStep *>(currentStep);
                     if (outputStep)
                     {
                         // extract content from the OUTPUT step and store it
@@ -744,11 +759,13 @@ public:
                         contentFromPreviousSteps.push_back("Content from output step");
                     }
                 }
+
+                currentStepIndex++;
             }
             else
             {
                 std::cout << "Skipping to the next step..." << std::endl;
-                screenSkipCount[step->getType()]++;
+                screenSkipCount[currentStep->getType()]++;
             }
 
             // wait for user confirmation to proceed to the next step
@@ -767,7 +784,8 @@ public:
     }
 
     // function to report an error for a specific step type
-    void reportError(const std::string &stepType)
+    void
+    reportError(const std::string &stepType)
     {
         errorScreenCount[stepType]++;
         totalErrorCount++;
@@ -1059,6 +1077,7 @@ int main()
         std::cout << "Do you want to add more steps? (y/n): ";
         std::cin >> addMore;
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
     } while (addMore == 'y' || addMore == 'Y');
 
     std::string fileName = "flow.txt";
