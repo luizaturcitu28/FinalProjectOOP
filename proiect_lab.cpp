@@ -30,12 +30,15 @@ enum class OperationType
 class Step
 {
 public:
+    // declaratie functie virtuala pura care sa fie executata in clasele derivate
     virtual void execute() = 0;
     virtual std::string getType() const = 0;
+    // functie virtuala cu implementare implicita. Returneaza true dar poate fi suprascrisa in clasele derivate
     virtual bool userInteraction()
     {
         return true;
     }
+    // functie virtuala cu implementare implicita
     virtual void displayDescription() const
     {
         std::cout << "No description available for this step" << std::endl;
@@ -176,7 +179,7 @@ public:
     {
         std::cout << "Description: " << description << std::endl;
         std::cout << "Enter CSV data: ";
-        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Clear the input buffer
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Clear the input buffer (previne consumul neasteptat al unor caractere ramase in buffer dupa citirea valorilor)
         std::getline(std::cin, CSVInput);
 
         std::cout << "Enter the filename to save the CSV data: ";
@@ -206,11 +209,13 @@ public:
         std::cout << "Expected input: " << description << std::endl;
     }
 
+    // returneaza datele csv introduse de utilizator
     std::string getCSVInput() const
     {
         return CSVInput;
     }
 
+    // returneaza numele fisierului dat de utilizator
     std::string getFileName() const
     {
         return fileName;
@@ -252,7 +257,7 @@ public:
         // if the reading doesn't work
         if (std::cin.fail())
         {
-            std::cin.clear();
+            std::cin.clear(); // resetarea starii obiectului std::cin
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
             throw std::invalid_argument("Invalid input. Please enter a valid number.");
         }
@@ -290,15 +295,16 @@ class CalculusStep : public Step
 {
 private:
     // set a vector to the previous steps to be able to effectuate the operations on them
-    std::vector<NumberInputStep *> previousSteps;
-    std::vector<char> operations;
+    std::vector<NumberInputStep *> previousSteps; // vector de pasi anteriori
+    std::vector<char> operations;                 // vector de operatii matematice
     float result;
-    OperationType operationType;
+    OperationType operationType; // alegem tipul de operatie matematica
 
 public:
     // constructor fot calculus step
     CalculusStep(const std::vector<NumberInputStep *> &steps, const std::vector<char> &ops, OperationType opType) : previousSteps(steps), operations(ops), result(0.0f), operationType(opType) {}
 
+    // afiseaza expresia si implementeaza operatia matematica
     void execute() override
     {
         std::cout << "Expression: ";
@@ -380,6 +386,7 @@ public:
         return result;
     }
 
+    // destructor care elibereaza memoria ocupata de pasii anteriori
     ~CalculusStep()
     {
         for (NumberInputStep *step : previousSteps)
@@ -401,9 +408,10 @@ public:
     void execute() override
     {
         std::cout << "Displaying information from the previous step:... " << std::endl;
+        // verifica tipul pasului anterior si afiseaza informatiile corespunzatoare
         if (previousStep->getType() == "TEXT INPUT")
         {
-            TextInputStep *textInputStep = dynamic_cast<TextInputStep *>(previousStep);
+            TextInputStep *textInputStep = dynamic_cast<TextInputStep *>(previousStep); // folosim dynamic_cast pentru a incerca sa convertim pointerul previousStep la un pointer de tipul TextInputStep
             if (textInputStep)
             {
                 std::cout << "Text Input Content: " << textInputStep->getTextInput() << std::endl;
@@ -446,7 +454,9 @@ public:
         std::ifstream file(fileName);
         if (file.is_open())
         {
+            // cream un obiect buffer pentru a stoca continutul fisierului
             std::stringstream buffer;
+            // citim intregul continut al fisierului in buffer
             buffer << file.rdbuf();
             std::cout << "File Content:" << std::endl
                       << buffer.str() << std::endl;
@@ -469,7 +479,7 @@ class TextFileInputStep : public Step
 private:
     std::string description;
     std::string fileName;
-    std::string fileContent;
+    std::string fileContent; // continutul citit din fisier
 
 public:
     // constructor for text file input step
@@ -483,7 +493,7 @@ public:
         // check if the file is open
         if (inputFile.is_open())
         {
-            // read the content from the file
+            // read the content from the file linie cu linie si adauga la continutul total al fisierului
             std::string line;
             while (std::getline(inputFile, line))
             {
@@ -613,6 +623,7 @@ public:
         std::ofstream outputFile(fileName);
         if (outputFile.is_open())
         {
+            // scrie informatii despre pas si continutul de la pasii respectivi in fisier
             outputFile << "Step Number: " << stepNumber << std::endl;
             outputFile << "Title: " << title << std::endl;
             outputFile << "Description: " << description << std::endl;
@@ -724,7 +735,7 @@ public:
         return flowName;
     }
 
-    // function to add a step to the flow
+    // function to add a step to the flow, permite adaugarea oricarui tip de pasi
     template <typename T, typename... Args>
     void addStep(Args &&...args)
     {
@@ -739,6 +750,7 @@ public:
         std::vector<std::string> contentFromPreviousSteps;
         size_t currentStepIndex = 0;
 
+        // parcurgem pasii flow-ului si ii executa, afisand pasul curent
         while (currentStepIndex < steps.size())
         {
             Step *currentStep = steps[currentStepIndex];
@@ -752,6 +764,7 @@ public:
             {
                 currentStep->execute();
 
+                // daca pasul este output, extragem continutul de aici
                 if (currentStep->getType() == "OUTPUT")
                 {
                     const OutputStep *outputStep = dynamic_cast<const OutputStep *>(currentStep);
@@ -797,6 +810,7 @@ public:
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         }
 
+        // daca ultimul pas e de tip calculus, afiseaza rezultatul final
         const CalculusStep *lastCalculusStep = dynamic_cast<const CalculusStep *>(steps.back());
         if (lastCalculusStep)
         {
@@ -808,8 +822,7 @@ public:
     }
 
     // function to report an error for a specific step type
-    void
-    reportError(const std::string &stepType)
+    void reportError(const std::string &stepType)
     {
         errorScreenCount[stepType]++;
         totalErrorCount++;
@@ -851,7 +864,8 @@ public:
         // check if the flow we eant to delete matches the current flow
         if (flowToDelete == flowName)
         {
-            std::cout << "Deleting flow '" << flowToDelete << "'..." << std::endl;
+            throw "Deleting flow";
+            std::cout << flowToDelete << "'..." << std::endl;
             // clean up allocated steps
             for (Step *step : steps)
             {
@@ -978,10 +992,14 @@ int main()
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
             std::string expression;
             std::getline(std::cin, expression);
+            // initializam flux de intrare pentru a descompune expresia in token-uri
             std::istringstream iss(expression);
+            // initializam o variabila pentru a stoca fiecare token din expresie
             std::string token;
+            // parcurge expresia token cu token
             while (iss >> token)
             {
+                // verificam daca tokenul este un operant(numar) sau un operator
                 if (isdigit(token[0]) || (token[0] == '-' && isdigit(token[1])))
                 {
                     std::string description = "Operand" + token;
@@ -990,6 +1008,7 @@ int main()
                 }
                 else
                 {
+                    // daca tokenul e operator, il adaugam la vectorul operations
                     operations.push_back(token[0]);
                 }
             }
@@ -1045,7 +1064,8 @@ int main()
             std::cin >> prevStepType;
             if (prevStepType == "TEXT INPUT" || prevStepType == "CSV INPUT")
             {
-                // Create a dummy step of the previous type for demonstration purposes
+                // Creează un pas fictiv de tipul specificat de utilizator pentru a servi drept pas anterior în cadrul demonstrației.
+                // Este folosit static_cast pentru a converti instanța de TextInputStep sau CSVInputStep într-un pointer la clasa de bază Step.
                 Step *dummyPrevStep = (prevStepType == "TEXT INPUT") ? static_cast<Step *>(new TextInputStep("")) : static_cast<Step *>(new CSVInputStep(""));
                 process.addStep<DisplayStep>(dummyPrevStep);
             }
@@ -1125,6 +1145,14 @@ int main()
     std::cout << "Flow '" << flowName << "' created at: " << process.getCreationTimestamp() << std::endl;
     process.displayAnalytics();
 
-    process.deleteFlow(flowName);
+    try
+    {
+        process.deleteFlow(flowName);
+    }
+    catch (const char *message)
+    {
+        cerr << message << endl;
+    }
+
     return 0;
 }
